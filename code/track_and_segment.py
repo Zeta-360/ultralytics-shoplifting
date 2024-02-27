@@ -26,11 +26,11 @@ Fast_SAM_frames = []
 
 # Add the current directory to the system path
 #sys.path.append(current_dir)
-SAM_model= FastSAM(os.path.join("weights/FastSAM.pt"))
+SAM_model= FastSAM(os.path.join("../weights/FastSAM.pt"))
 
 def stitch_video_FastSAM():
     #load frame
-    frame = cv2.imread(os.path.join("outputs","FastSAM","outs","image0.jpg"))
+    frame = cv2.imread(os.path.join("..","outputs","FastSAM","outs","image0.jpg"))
     Fast_SAM_frames.append(frame)
 
 def create_SAM_video(input_file_base_name):
@@ -38,7 +38,7 @@ def create_SAM_video(input_file_base_name):
 
     # Define the codec using VideoWriter_fourcc and create a VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Be sure to use lower case
-    out = cv2.VideoWriter(os.path.join('outputs/FastSAM',input_file_base_name), fourcc, 30.0, (width, height))
+    out = cv2.VideoWriter(os.path.join("..",'outputs/FastSAM',input_file_base_name), fourcc, 30.0, (width, height))
 
     for frame in Fast_SAM_frames:
         out.write(frame)  # Write out frame to video
@@ -56,7 +56,7 @@ def segment_inside_box(frame, x, y, x2, y2):
     prompt_process = FastSAMPrompt(frame, everything_results, device=DEVICE)
     masks = prompt_process.box_prompt(bbox = float_box)
     
-    annotated_image = prompt_process.plot(annotations=masks, output=os.path.join(current_dir,"outs","video1_1"))
+    annotated_image = prompt_process.plot(annotations=masks, output=os.path.join("..","outputs/FastSAM","outs"))
 
     # annotated_image=annotate_image(frame, masks=masks)
     # sv.plot_image(image=annotated_image, size=(8, 8))
@@ -81,7 +81,7 @@ def main(input_path):
 
     w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 
-    result = cv2.VideoWriter(os.path.join("outputs/FastSAM/outs",f"{input_file_base_name}_object_tracking.avi"),
+    result = cv2.VideoWriter(os.path.join("..","outputs/FastSAM/outs",f"{input_file_base_name}_object_tracking.avi"),
                         cv2.VideoWriter_fourcc(*'mp4v'),
                         fps,
                         (w, h))
@@ -149,7 +149,7 @@ def main(input_path):
 
 
 if __name__ == "__main__":
-    input_file_path = "/media/i9/1TB_JAPAN/VSCODE/COOL_GITS/ultralytics-shoplifting/data/vids/1_1_crop.mp4"
+    input_file_path = "../data/vids/1_1_crop.mp4"
     
 
     main(input_file_path)   
