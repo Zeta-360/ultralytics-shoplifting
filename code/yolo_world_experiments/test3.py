@@ -26,14 +26,15 @@ if video_capture: # video
 else: # stream
     fps, w, h = 30, 640, 480
 
-output_base_dir = '/opt/homebrew/runs/detect'
+
+output_base_dir = '../../data/yolo_world/'
 epoch_time = int(time.time())
 output_dir = os.path.join(output_base_dir, f'{video_name}_{epoch_time}')
 output_dir_frames = os.path.join(output_dir, 'frames')
 output_video_save_path = os.path.join(output_dir, f'{video_name}.mp4')
 
-os.mkdir(output_dir)
-os.mkdir(output_dir_frames)
+# os.mkdir(output_dir)
+# os.mkdir(output_dir_frames)
 
 video_writer = cv2.VideoWriter(output_video_save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
 

@@ -15,7 +15,8 @@ import base64
 from roboflow import Roboflow
 from ultralytics import FastSAM
 from ultralytics.models.fastsam import FastSAMPrompt
-
+#change current directory to the directory of the script
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
 track_history = defaultdict(lambda: [])
@@ -54,10 +55,13 @@ def segment_inside_box(frame, x, y, x2, y2):
     DEVICE = 0
     everything_results = SAM_model(frame, device=DEVICE, retina_masks=True, conf=0.3, iou=0.9)
     prompt_process = FastSAMPrompt(frame, everything_results, device=DEVICE)
-    masks = prompt_process.box_prompt(bbox = float_box)
+    #masks = prompt_process.box_prompt(bbox = float_box)
+    masks = prompt_process.text_prompt("items picked up by the person with hand")
     
-    annotated_image = prompt_process.plot(annotations=masks, output=os.path.join("..","outputs/FastSAM","outs"))
-
+    prompt_process.plot(annotations=masks, output=os.path.join("..","outputs/FastSAM","outs"))
+    #read saved out image using cv2
+    annotated_image = cv2.imread(os.path.join("..","outputs/FastSAM","outs","image0.jpg"))
+    return annotated_image
     # annotated_image=annotate_image(frame, masks=masks)
     # sv.plot_image(image=annotated_image, size=(8, 8))
 
@@ -81,10 +85,9 @@ def main(input_path):
 
     w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 
-    result = cv2.VideoWriter(os.path.join("..","outputs/FastSAM/outs",f"{input_file_base_name}_object_tracking.avi"),
-                        cv2.VideoWriter_fourcc(*'mp4v'),
-                        fps,
-                        (w, h))
+    result = cv2.VideoWriter(os.path.join("..","outputs/FastSAM/outs",f"{input_file_base_name}_fastsam.avi"),
+                        cv2.VideoWriter_fourcc(*'MJPG'), fps, (w, h))
+                        
 
     while cap.isOpened():
         success, frame = cap.read()
@@ -109,9 +112,9 @@ def main(input_path):
                     frame_box = cv2.rectangle(frame.copy(), (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 255, 0), 2)
                     cropped_frame = frame_box[int(box[1]):int(box[3]), int(box[0]):int(box[2])]
                     #### FastSAM for segmenting inside the bounding box####
-                    segment_inside_box(frame, box[0], box[1], box[2], box[3])
+                    seg_frame = segment_inside_box(frame, box[0], box[1], box[2], box[3])
 
-                    stitch_video_FastSAM()
+                    #stitch_video_FastSAM()
                     #### Pose Estimation ####
                     # pose_model = YOLO('yolov8n-pose.pt') 
                     # pose_estimation(frame)
@@ -120,20 +123,20 @@ def main(input_path):
                     annotator.box_label(box, color=colors(int(cls), True), label=names[int(cls)])
 
                     # Store tracking history
-                    track = track_history[track_id]
-                    track.append((int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)))
-                    if len(track) > 30:
-                        track.pop(0)
+                    # track = track_history[track_id]
+                    # track.append((int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)))
+                    # if len(track) > 30:
+                    #     track.pop(0)
 
-                    # Plot tracks
-                    points = np.array(track, dtype=np.int32).reshape((-1, 1, 2))
-                    cv2.circle(frame, (track[-1]), 7, colors(int(cls), True), -1)
-                    cv2.polylines(frame, [points], isClosed=False, color=colors(int(cls), True), thickness=2)
+                    # # Plot tracks
+                    # points = np.array(track, dtype=np.int32).reshape((-1, 1, 2))
+                    # cv2.circle(frame, (track[-1]), 7, colors(int(cls), True), -1)
+                    # cv2.polylines(frame, [points], isClosed=False, color=colors(int(cls), True), thickness=2)
 
             #view output live
             #cv2.imshow("Object Tracking", frame)
 
-            result.write(frame)
+            result.write(seg_frame)
         
             
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -142,14 +145,14 @@ def main(input_path):
             break
 
 
-    create_SAM_video(input_file_base_name)       
+    #create_SAM_video(input_file_base_name)       
     result.release()
     cap.release()
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    input_file_path = "../data/vids/1_1_crop.mp4"
+    input_file_path = "../data/vids/girl_lifting_4s.mp4"
     
 
     main(input_file_path)   
